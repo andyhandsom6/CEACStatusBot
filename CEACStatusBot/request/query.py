@@ -37,6 +37,17 @@ def query_status(location, application_num, passport_number, surname, captchaHan
 
         soup = BeautifulSoup(r.text, features="lxml")
 
+        # A Cloudflare block page contains no CEAC form. Retrying it 5 times
+        # cannot resolve an access restriction imposed on the runner.
+        if r.status_code == 403:
+            cloudflare = "cloudflare" in r.headers.get("Server", "").lower() or "cloudflare" in r.text[:8192].lower()
+            source = "Cloudflare" if cloudflare else "the remote server"
+            raise RuntimeError(
+                f"CEAC request rejected by {source} (HTTP 403). "
+                "The runner cannot reach the CEAC query form, so no visa status was checked. "
+                "Use a trusted runner/network that can access the CEAC website."
+            )
+
         # Find captcha image. On a mismatch, report only non-sensitive response metadata.
         captcha = soup.find(name="img", id="c_status_ctl00_contentplaceholder1_defaultcaptcha_CaptchaImage")
         if not captcha or not captcha.get("src"):
