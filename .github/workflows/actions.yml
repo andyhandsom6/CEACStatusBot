@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ceac-repair-20261021  # Temporary diagnostic branch
   workflow_dispatch:
   schedule:
     - cron: '17 * * * *' # At 00:00 on Monday
