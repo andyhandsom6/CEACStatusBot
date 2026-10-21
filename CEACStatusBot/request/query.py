@@ -39,6 +39,9 @@ def query_status(location, application_num, passport_number, surname, captchaHan
 
         # Find captcha image
         captcha = soup.find(name="img", id="c_status_ctl00_contentplaceholder1_defaultcaptcha_CaptchaImage")
+        if not captcha or not captcha.get("src"):
+            print("Captcha image not found on CEAC page, retrying...")
+            continue
         image_url = ROOT + captcha["src"]
         img_resp = session.get(image_url)
 
@@ -48,6 +51,9 @@ def query_status(location, application_num, passport_number, surname, captchaHan
 
         # Find the correct value for the location dropdown
         location_dropdown = soup.find("select", id="Location_Dropdown")
+        if not location_dropdown:
+            print("Location dropdown not found on CEAC page, retrying...")
+            continue
         location_value = None
         for option in location_dropdown.find_all("option"):
             if location in option.text:
