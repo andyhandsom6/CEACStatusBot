@@ -47,6 +47,19 @@ Create a Telegram bot and get the info below according to [this tutorial](https:
 
 - TG_CHAT_ID: the chat id you want to receive the notification
 
+### Cloudflare HTTP 403 on hosted runners
+
+If the workflow reports `CEAC request rejected by Cloudflare (HTTP 403)`, this is **not** a bad application number or a captcha-recognition error. The CEAC website denied the HTTP request before showing the form. Retrying it or changing the captcha image selector does not fix the blocked network.
+
+GitHub-hosted runners may be blocked. A **trusted self-hosted runner** is an option if its own network is able to open the official [CEAC status page](https://ceac.state.gov/CEACStatTracker/Status.aspx?App=NIV). It is not guaranteed to work on every network.
+
+1. Verify the CEAC page loads normally in a browser on the machine you plan to use. If it is blocked there too, changing the runner will not solve the problem.
+2. Register that machine under repository **Settings → Actions → Runners**. Use only a machine you control, because the workflow receives visa-related secrets.
+3. Under **Settings → Secrets and variables → Actions → Variables**, add repository variable `CEAC_RUNNER` with value `self-hosted`.
+4. Run the workflow manually to verify a successful lookup. The workflow's scheduled checks will then use the configured runner.
+
+Without `CEAC_RUNNER`, the workflow defaults to `ubuntu-latest`. A 403 means the lookup was **not performed**; it does not say anything about the visa application's status.
+
 ### Github Actions
 
 1. folk this repo
