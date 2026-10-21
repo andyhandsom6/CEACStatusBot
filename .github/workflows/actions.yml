@@ -37,7 +37,34 @@ jobs:
       - name: Sync environment with uv
         run: uv sync
 
+
+      - name: Probe CEAC access using actual Chrome (repair branch only)
+        if: github.ref == 'refs/heads/ceac-repair-20261021'
+        run: |
+          uv pip install --python .venv/bin/python playwright
+          uv run python - <<'PY'
+          import shutil
+          from playwright.sync_api import sync_playwright
+          print(f"Chrome path: {shutil.which('google-chrome') or shutil.which('chromium') or 'not installed'}", flush=True)
+          with sync_playwright() as pw:
+              for mode in ("headless", "headed"):
+                  if mode == "headed" and not shutil.which("xvfb-run"):
+                      print("headed mode unavailable (no xvfb-run)", flush=True)
+                      continue
+                  try:
+                      browser = pw.chromium.launch(channel="chrome", headless=(mode == "headless"), args=["--no-sandbox"])
+                      page = browser.new_page()
+                      response = page.goto("https://ceac.state.gov/CEACStatTracker/Status.aspx?App=NIV", wait_until="domcontentloaded", timeout=30000)
+                      page.wait_for_timeout(9000)
+                      print(f"Chrome {mode}: http={response.status if response else None}, title={page.title()[:100]!r}, forms={page.locator('form').count()}, captcha_imgs={page.locator('img[id*=CaptchaImage]').count()}, dropdowns={page.locator('#Location_Dropdown').count()}", flush=True)
+                      browser.close()
+                  except Exception as exc:
+                      print(f"Chrome {mode} error: {type(exc).__name__} {str(exc)[:220]}", flush=True)
+                      break
+          PY
+
       - name: Execute py script
+        if: github.ref != 'refs/heads/ceac-repair-20261021'
         env:
           LOCATION: ${{ secrets.LOCATION }}
           NUMBER: ${{ secrets.NUMBER }}
