@@ -10,7 +10,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Configure repo variable CEAC_RUNNER=self-hosted to use a trusted runner.
+    runs-on: ${{ vars.CEAC_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Checkout repo content
         uses: actions/checkout@v2
@@ -35,6 +36,9 @@ jobs:
 
       - name: Sync environment with uv
         run: uv sync
+
+      - name: Test CEAC error handling
+        run: uv run python -m unittest discover -s tests -v
 
       - name: Execute py script
         env:
