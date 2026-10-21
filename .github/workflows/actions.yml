@@ -37,6 +37,9 @@ jobs:
       - name: Sync environment with uv
         run: uv sync
 
+      - name: Test CEAC error handling
+        run: uv run python -m unittest discover -s tests -v
+
       - name: Execute py script
         env:
           LOCATION: ${{ secrets.LOCATION }}
